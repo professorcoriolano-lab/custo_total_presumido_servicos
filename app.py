@@ -10,6 +10,46 @@ st.set_page_config(
     layout="centered"
 )
 
+# ─────────────────────────────────────────────
+# SENHAS DE ACESSO — edite para cada cliente
+# ─────────────────────────────────────────────
+SENHAS_VALIDAS = {
+    "escritorio01": "Escritório Modelo Contabilidade",
+    "escritorio02": "Contabilidade Silva & Associados",
+    "escritorio03": "JR Assessoria Contábil",
+    "demo2026":     "Acesso Demonstração",
+}
+
+# ─────────────────────────────────────────────
+# TELA DE LOGIN
+# ─────────────────────────────────────────────
+if "autenticado" not in st.session_state:
+    st.session_state.autenticado = False
+
+if not st.session_state.autenticado:
+    st.markdown("""
+    <div style="background-color:#2c3e50;color:white;padding:20px 24px;
+    border-radius:8px;text-align:center;font-size:18px;font-weight:bold;margin-bottom:32px;">
+        🔒 SISTEMA DE PLANEJAMENTO TRIBUTÁRIO<br>
+        <span style="font-size:13px;font-weight:normal;">Acesso restrito — Digite sua senha</span>
+    </div>
+    """, unsafe_allow_html=True)
+
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        senha_digitada = st.text_input("Senha de acesso", type="password", placeholder="Digite sua senha aqui")
+        entrar = st.button("🔓 Entrar", use_container_width=True)
+
+        if entrar:
+            if senha_digitada in SENHAS_VALIDAS:
+                st.session_state.autenticado = True
+                st.session_state.nome_cliente = SENHAS_VALIDAS[senha_digitada]
+                st.rerun()
+            else:
+                st.error("❌ Senha incorreta. Verifique com o administrador.")
+
+    st.stop()
+
 st.markdown("""
 <style>
     .main { background-color: #f7f9fc; }
