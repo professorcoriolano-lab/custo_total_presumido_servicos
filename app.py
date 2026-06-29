@@ -3,11 +3,7 @@ import matplotlib.pyplot as plt
 import matplotlib
 matplotlib.use('Agg')
 from io import BytesIO
-import base64
 
-# ─────────────────────────────────────────────
-# CONFIGURAÇÃO DA PÁGINA
-# ─────────────────────────────────────────────
 st.set_page_config(
     page_title="Planejamento Tributário | Lucro Presumido",
     page_icon="📊",
@@ -63,9 +59,6 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# ─────────────────────────────────────────────
-# CABEÇALHO
-# ─────────────────────────────────────────────
 st.markdown("""
 <div class="titulo-header">
     📊 PLANEJAMENTO FISCAL E TRABALHISTA ANUAL<br>
@@ -73,9 +66,6 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# ─────────────────────────────────────────────
-# FORMULÁRIO DE ENTRADA
-# ─────────────────────────────────────────────
 st.markdown('<div class="section-title">⚙️ Configurações</div>', unsafe_allow_html=True)
 
 tipo_servico = st.selectbox(
@@ -98,12 +88,8 @@ rat_pct = st.number_input("RAT (%) — Ex: para 2% digite 2", min_value=0.0, max
 
 calcular = st.button("▶ Gerar Planejamento")
 
-# ─────────────────────────────────────────────
-# CÁLCULOS
-# ─────────────────────────────────────────────
 if calcular:
 
-    # Presunção
     if "32%" in tipo_servico:
         presuncao_irpj = 0.32
         presuncao_csll = 0.32
@@ -116,42 +102,36 @@ if calcular:
     rat = rat_pct / 100
     rat_ajustado = fap * rat
 
-    # Folha anual
-    salario_anual        = salario_mensal * 12
-    prolabore_anual      = prolabore_mensal * 12
+    salario_anual         = salario_mensal * 12
+    prolabore_anual       = prolabore_mensal * 12
     decimo_terceiro_anual = salario_mensal * 12
-    terco_ferias_anual   = decimo_terceiro_anual / 3
+    terco_ferias_anual    = decimo_terceiro_anual / 3
     despesas_folha_sem_encargos = salario_anual + prolabore_anual + decimo_terceiro_anual + terco_ferias_anual
 
-    # FGTS
     fgts_folha  = salario_anual * 0.08
     fgts_13     = decimo_terceiro_anual * 0.08
     fgts_ferias = terco_ferias_anual * 0.08
     total_fgts  = fgts_folha + fgts_13 + fgts_ferias
 
-    # INSS
     inss_prolabore = prolabore_anual * 0.20
     inss_salarios  = salario_anual * 0.20
     inss_13        = decimo_terceiro_anual * 0.20
     inss_ferias    = terco_ferias_anual * 0.20
     total_inss     = inss_prolabore + inss_salarios + inss_13 + inss_ferias
 
-    # Terceiros
     terceiros_salarios = salario_anual * 0.058
     terceiros_13       = decimo_terceiro_anual * 0.058
     terceiros_ferias   = terco_ferias_anual * 0.058
     total_terceiros    = terceiros_salarios + terceiros_13 + terceiros_ferias
 
-    # RAT Ajustado
-    rat_salarios   = salario_anual * rat_ajustado
-    rat_13         = decimo_terceiro_anual * rat_ajustado
-    rat_ferias     = terco_ferias_anual * rat_ajustado
+    rat_salarios       = salario_anual * rat_ajustado
+    rat_13             = decimo_terceiro_anual * rat_ajustado
+    rat_ferias         = terco_ferias_anual * rat_ajustado
     total_rat_ajustado = rat_salarios + rat_13 + rat_ferias
 
-    total_encargos_anual    = total_fgts + total_inss + total_terceiros + total_rat_ajustado
+    total_encargos_anual     = total_fgts + total_inss + total_terceiros + total_rat_ajustado
     custo_folha_com_encargos = despesas_folha_sem_encargos + total_encargos_anual
 
-    # Impostos
     pis_anual    = faturamento_anual * 0.0065
     cofins_anual = faturamento_anual * 0.0300
     iss_anual    = faturamento_anual * 0.0500
@@ -159,9 +139,8 @@ if calcular:
     base_irpj_anual = faturamento_anual * presuncao_irpj
     base_csll_anual = faturamento_anual * presuncao_csll
 
-    irpj_subtotal = base_irpj_anual * 0.15
-    csll_anual    = base_csll_anual * 0.09
-
+    irpj_subtotal  = base_irpj_anual * 0.15
+    csll_anual     = base_csll_anual * 0.09
     adicional_irpj = (base_irpj_anual - 240000) * 0.10 if base_irpj_anual > 240000 else 0
     irpj_total_anual = irpj_subtotal + adicional_irpj
 
@@ -169,11 +148,8 @@ if calcular:
     custo_total_empresa        = total_impostos_faturamento + custo_folha_com_encargos
     lair_anual                 = faturamento_anual - custo_total_empresa
 
-    # ─────────────────────────────────────────
-    # EXIBIÇÃO DOS RESULTADOS
-    # ─────────────────────────────────────────
-
-    def fmt(v): return f"R$ {v:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+    def fmt(v):
+        return f"R$ {v:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
 
     st.markdown('<div class="section-title">1. Despesas Operacionais com Folha (Anual)</div>', unsafe_allow_html=True)
     dados_folha = {
@@ -189,6 +165,7 @@ if calcular:
         col_b.markdown(f"**{fmt(v)}**")
 
     st.markdown('<div class="section-title">2. Encargos Sociais Detalhados (Anual)</div>', unsafe_allow_html=True)
+    import pandas as pd
     encargos = [
         ("FGTS sobre Salários", "Salários", "8,00%", fgts_folha),
         ("FGTS sobre 13º Salário", "13º Salário", "8,00%", fgts_13),
@@ -204,7 +181,6 @@ if calcular:
         (f"RAT Ajustado sobre 13º", "13º Salário", f"{rat_ajustado*100:.3f}%", rat_13),
         (f"RAT Ajustado sobre 1/3 Férias", "1/3 Férias", f"{rat_ajustado*100:.3f}%", rat_ferias),
     ]
-    import pandas as pd
     df_enc = pd.DataFrame(encargos, columns=["Encargo", "Base", "Alíquota", "Valor Anual"])
     df_enc["Valor Anual"] = df_enc["Valor Anual"].apply(fmt)
     st.dataframe(df_enc, use_container_width=True, hide_index=True)
@@ -244,9 +220,6 @@ if calcular:
     </div>
     """, unsafe_allow_html=True)
 
-    # ─────────────────────────────────────────
-    # GRÁFICO DE PIZZA
-    # ─────────────────────────────────────────
     st.markdown('<div class="section-title">📈 Distribuição da Receita Bruta</div>', unsafe_allow_html=True)
     fig, ax = plt.subplots(figsize=(7, 7))
     labels = ['PIS/COFINS', 'ISS', 'IRPJ/CSLL', 'Folha Líquida', 'Encargos da Folha', 'Resultado (LAIR)']
@@ -258,109 +231,138 @@ if calcular:
         total_encargos_anual,
         max(0, lair_anual)
     ]
-    colors = ['#e74c3c', '#e67e22', '#c0392b', '#34495e', '#bdc3c7', '#2ecc71']
-    ax.pie(valores, labels=labels, autopct='%1.1f%%', startangle=140, colors=colors)
+    colors_pizza = ['#e74c3c', '#e67e22', '#c0392b', '#34495e', '#bdc3c7', '#2ecc71']
+    ax.pie(valores, labels=labels, autopct='%1.1f%%', startangle=140, colors=colors_pizza)
     ax.set_title('Distribuição Anual da Receita Bruta (Faturamento)', pad=20)
     st.pyplot(fig)
     plt.close()
 
-    # ─────────────────────────────────────────
-    # GERAÇÃO DO PDF PARA DOWNLOAD
-    # ─────────────────────────────────────────
-    img_buf = BytesIO()
-    fig2, ax2 = plt.subplots(figsize=(7, 7))
-    ax2.pie(valores, labels=labels, autopct='%1.1f%%', startangle=140, colors=colors)
-    ax2.set_title('Distribuição Anual da Receita Bruta (Faturamento)', pad=20)
-    fig2.savefig(img_buf, format='png', bbox_inches='tight')
-    img_buf.seek(0)
-    img_b64 = base64.b64encode(img_buf.read()).decode('utf-8')
+    # --- GERAÇÃO DO PDF COM REPORTLAB ---
+    from reportlab.lib.pagesizes import A4
+    from reportlab.lib import colors as rl_colors
+    from reportlab.lib.units import mm
+    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib.enums import TA_CENTER
+
+    pdf_buf = BytesIO()
+    doc = SimpleDocTemplate(pdf_buf, pagesize=A4,
+                            leftMargin=15*mm, rightMargin=15*mm,
+                            topMargin=15*mm, bottomMargin=15*mm)
+
+    dark      = rl_colors.HexColor('#2c3e50')
+    amarelo   = rl_colors.HexColor('#f9f9db')
+    cinza_hdr = rl_colors.HexColor('#f5f5f5')
+
+    style_header  = ParagraphStyle('h', fontSize=13, textColor=rl_colors.white,
+                                   backColor=dark, alignment=TA_CENTER,
+                                   fontName='Helvetica-Bold', leading=18,
+                                   spaceAfter=6, spaceBefore=4)
+    style_section = ParagraphStyle('s', fontSize=11, textColor=dark,
+                                   fontName='Helvetica-Bold', spaceAfter=4, spaceBefore=10)
+    style_normal  = ParagraphStyle('n', fontSize=10, spaceAfter=4)
+
+    def make_table(data, col_widths, total_rows=[]):
+        ts = [
+            ('FONTNAME',    (0,0), (-1,0),  'Helvetica-Bold'),
+            ('BACKGROUND',  (0,0), (-1,0),  cinza_hdr),
+            ('GRID',        (0,0), (-1,-1), 0.4, rl_colors.HexColor('#dddddd')),
+            ('FONTSIZE',    (0,0), (-1,-1), 9),
+            ('ROWBACKGROUNDS', (0,1), (-1,-1), [rl_colors.white, rl_colors.HexColor('#fafafa')]),
+            ('VALIGN',      (0,0), (-1,-1), 'MIDDLE'),
+            ('LEFTPADDING', (0,0), (-1,-1), 5),
+            ('RIGHTPADDING',(0,0), (-1,-1), 5),
+            ('TOPPADDING',  (0,0), (-1,-1), 3),
+            ('BOTTOMPADDING',(0,0),(-1,-1), 3),
+        ]
+        for r in total_rows:
+            ts += [('BACKGROUND', (0,r), (-1,r), amarelo),
+                   ('FONTNAME',   (0,r), (-1,r), 'Helvetica-Bold')]
+        t = Table(data, colWidths=col_widths)
+        t.setStyle(TableStyle(ts))
+        return t
+
+    elems = []
+    elems.append(Paragraph(
+        f"PLANEJAMENTO FISCAL E TRABALHISTA ANUAL<br/>"
+        f"<font size=9>Regime: Lucro Presumido — {tipo_servico_str}</font>",
+        style_header))
+    elems.append(Paragraph(f"<b>Faturamento Projetado Anual:</b> {fmt(faturamento_anual)}", style_normal))
+
+    elems.append(Paragraph("1. Despesas Operacionais com Folha (Acumulado 12 Meses)", style_section))
+    d1 = [["Descrição", "Valor Anual (R$)"],
+          ["Salários Anualizados",    fmt(salario_anual)],
+          ["Pró-Labore Anualizado",   fmt(prolabore_anual)],
+          ["13º Salário (Provisão)",  fmt(decimo_terceiro_anual)],
+          ["1/3 de Férias (Provisão)",fmt(terco_ferias_anual)],
+          ["TOTAL SEM ENCARGOS",      fmt(despesas_folha_sem_encargos)]]
+    elems.append(make_table(d1, [120*mm, 55*mm], total_rows=[5]))
+
+    elems.append(Paragraph("2. Encargos Sociais Detalhados (Anual)", style_section))
+    d2 = [["Encargo", "Base", "Alíquota", "Valor Anual"],
+          ["FGTS sobre Salários",       "Salários",    "8,00%",  fmt(fgts_folha)],
+          ["FGTS sobre 13º",            "13º Salário", "8,00%",  fmt(fgts_13)],
+          ["FGTS sobre 1/3 Férias",     "1/3 Férias",  "8,00%",  fmt(fgts_ferias)],
+          ["INSS sobre Pró-Labore",     "Pró-Labore",  "20,00%", fmt(inss_prolabore)],
+          ["INSS sobre Salários",       "Salários",    "20,00%", fmt(inss_salarios)],
+          ["INSS sobre 13º",            "13º Salário", "20,00%", fmt(inss_13)],
+          ["INSS sobre 1/3 Férias",     "1/3 Férias",  "20,00%", fmt(inss_ferias)],
+          ["Terceiros sobre Salários",  "Salários",    "5,80%",  fmt(terceiros_salarios)],
+          ["Terceiros sobre 13º",       "13º Salário", "5,80%",  fmt(terceiros_13)],
+          ["Terceiros sobre 1/3 Férias","1/3 Férias",  "5,80%",  fmt(terceiros_ferias)],
+          ["RAT Ajustado sobre Salários","Salários",   f"{rat_ajustado*100:.3f}%", fmt(rat_salarios)],
+          ["RAT Ajustado sobre 13º",    "13º Salário", f"{rat_ajustado*100:.3f}%", fmt(rat_13)],
+          ["RAT Ajustado sobre 1/3 Férias","1/3 Férias",f"{rat_ajustado*100:.3f}%",fmt(rat_ferias)],
+          ["TOTAL DOS ENCARGOS",        "-", "-",      fmt(total_encargos_anual)]]
+    elems.append(make_table(d2, [72*mm, 35*mm, 25*mm, 43*mm], total_rows=[14]))
+
+    elems.append(Paragraph("3. Impostos sobre Faturamento (Lucro Presumido)", style_section))
+    d3 = [["Imposto", "Alíquota", "Valor Anual"],
+          ["PIS",             "0,65%",               fmt(pis_anual)],
+          ["COFINS",          "3,00%",               fmt(cofins_anual)],
+          ["ISS (Municipal)", "5,00%",               fmt(iss_anual)],
+          ["IRPJ (+ Adicional)","Presunção 15%(+10%)",fmt(irpj_total_anual)],
+          ["CSLL",            "Presunção 9%",         fmt(csll_anual)],
+          ["TOTAL DE IMPOSTOS","-",                  fmt(total_impostos_faturamento)]]
+    elems.append(make_table(d3, [80*mm, 55*mm, 40*mm], total_rows=[6]))
+
+    elems.append(Paragraph("4. Demonstrativo de Resultado Operacional", style_section))
+    d4 = [["Faturamento Bruto Total",                fmt(faturamento_anual)],
+          ["(-) Folha com Encargos",                 fmt(custo_folha_com_encargos)],
+          ["(-) Impostos sobre Faturamento",         fmt(total_impostos_faturamento)],
+          ["(=) RESULTADO LÍQUIDO OPERACIONAL (LAIR ANUAL)", fmt(lair_anual)]]
+    t4 = Table(d4, colWidths=[120*mm, 55*mm])
+    t4.setStyle(TableStyle([
+        ('GRID',        (0,0), (-1,-1), 0.4, rl_colors.HexColor('#dddddd')),
+        ('FONTSIZE',    (0,0), (-1,-1), 9),
+        ('ROWBACKGROUNDS',(0,0),(-1,-2),[rl_colors.white, rl_colors.HexColor('#fafafa')]),
+        ('BACKGROUND',  (0,3), (-1,3),  dark),
+        ('TEXTCOLOR',   (0,3), (-1,3),  rl_colors.white),
+        ('FONTNAME',    (0,3), (-1,3),  'Helvetica-Bold'),
+        ('FONTSIZE',    (0,3), (-1,3),  10),
+        ('LEFTPADDING', (0,0), (-1,-1), 5),
+        ('RIGHTPADDING',(0,0), (-1,-1), 5),
+        ('TOPPADDING',  (0,0), (-1,-1), 4),
+        ('BOTTOMPADDING',(0,0),(-1,-1), 4),
+    ]))
+    elems.append(t4)
+
+    elems.append(Spacer(1, 8*mm))
+    img_buf2 = BytesIO()
+    fig2, ax2 = plt.subplots(figsize=(6, 6))
+    ax2.pie(valores, labels=labels, autopct='%1.1f%%', startangle=140, colors=colors_pizza)
+    ax2.set_title('Distribuição Anual da Receita Bruta', pad=15)
+    fig2.savefig(img_buf2, format='png', bbox_inches='tight', dpi=120)
+    img_buf2.seek(0)
     plt.close(fig2)
+    elems.append(Image(img_buf2, width=130*mm, height=120*mm))
 
-    html_pdf = f'''
-<html><head><meta charset="UTF-8">
-<style>
-  @page {{ size: A4; margin: 12mm; }}
-  body {{ font-family: Arial, sans-serif; color: #333; font-size: 10.5px; line-height: 1.3; }}
-  .header {{ background-color: #2c3e50; color: white; padding: 12px; text-align: center; font-size: 15px; font-weight: bold; border-radius: 4px; }}
-  h3 {{ border-bottom: 2px solid #2c3e50; padding-bottom: 2px; margin-top: 12px; color: #2c3e50; font-size: 12px; }}
-  table {{ width: 100%; border-collapse: collapse; margin: 5px 0; }}
-  th, td {{ padding: 5px 8px; border: 1px solid #ddd; text-align: left; }}
-  th {{ background-color: #f5f5f5; font-weight: bold; }}
-  .total-row {{ font-weight: bold; background-color: #f9f9db; }}
-  .grand-total {{ font-weight: bold; background-color: #2c3e50; color: white; font-size: 12px; }}
-</style></head><body>
-<div class="header">PLANEJAMENTO FISCAL E TRABALHISTA ANUAL<br>
-<small>Regime: Lucro Presumido - {tipo_servico_str}</small></div>
-<p><strong>Faturamento Projetado Anual:</strong> {fmt(faturamento_anual)}</p>
+    doc.build(elems)
+    pdf_buf.seek(0)
 
-<h3>1. Despesas Operacionais com Folha (Acumulado 12 Meses)</h3>
-<table>
-  <tr><th>Descrição</th><th>Valor Anual (R$)</th></tr>
-  <tr><td>Salários Anualizados</td><td>{fmt(salario_anual)}</td></tr>
-  <tr><td>Pró-Labore Anualizado</td><td>{fmt(prolabore_anual)}</td></tr>
-  <tr><td>13º Salário (Provisão)</td><td>{fmt(decimo_terceiro_anual)}</td></tr>
-  <tr><td>1/3 de Férias (Provisão)</td><td>{fmt(terco_ferias_anual)}</td></tr>
-  <tr class="total-row"><td>TOTAL SEM ENCARGOS</td><td>{fmt(despesas_folha_sem_encargos)}</td></tr>
-</table>
-
-<h3>2. Encargos Sociais Detalhados (Anual)</h3>
-<table>
-  <tr><th>Encargo</th><th>Base</th><th>Alíquota</th><th>Valor Anual</th></tr>
-  <tr><td>FGTS sobre Salários</td><td>Salários</td><td>8,00%</td><td>{fmt(fgts_folha)}</td></tr>
-  <tr><td>FGTS sobre 13º</td><td>13º Salário</td><td>8,00%</td><td>{fmt(fgts_13)}</td></tr>
-  <tr><td>FGTS sobre 1/3 Férias</td><td>1/3 Férias</td><td>8,00%</td><td>{fmt(fgts_ferias)}</td></tr>
-  <tr><td>INSS sobre Pró-Labore</td><td>Pró-Labore</td><td>20,00%</td><td>{fmt(inss_prolabore)}</td></tr>
-  <tr><td>INSS sobre Salários</td><td>Salários</td><td>20,00%</td><td>{fmt(inss_salarios)}</td></tr>
-  <tr><td>INSS sobre 13º</td><td>13º Salário</td><td>20,00%</td><td>{fmt(inss_13)}</td></tr>
-  <tr><td>INSS sobre 1/3 Férias</td><td>1/3 Férias</td><td>20,00%</td><td>{fmt(inss_ferias)}</td></tr>
-  <tr><td>Terceiros sobre Salários</td><td>Salários</td><td>5,80%</td><td>{fmt(terceiros_salarios)}</td></tr>
-  <tr><td>Terceiros sobre 13º</td><td>13º Salário</td><td>5,80%</td><td>{fmt(terceiros_13)}</td></tr>
-  <tr><td>Terceiros sobre 1/3 Férias</td><td>1/3 Férias</td><td>5,80%</td><td>{fmt(terceiros_ferias)}</td></tr>
-  <tr><td>RAT Ajustado sobre Salários</td><td>Salários</td><td>{rat_ajustado*100:.3f}%</td><td>{fmt(rat_salarios)}</td></tr>
-  <tr><td>RAT Ajustado sobre 13º</td><td>13º Salário</td><td>{rat_ajustado*100:.3f}%</td><td>{fmt(rat_13)}</td></tr>
-  <tr><td>RAT Ajustado sobre 1/3 Férias</td><td>1/3 Férias</td><td>{rat_ajustado*100:.3f}%</td><td>{fmt(rat_ferias)}</td></tr>
-  <tr class="total-row"><td>TOTAL DOS ENCARGOS</td><td colspan="2">-</td><td>{fmt(total_encargos_anual)}</td></tr>
-</table>
-
-<h3>3. Impostos sobre Faturamento (Lucro Presumido)</h3>
-<table>
-  <tr><th>Imposto</th><th>Alíquota</th><th>Valor Anual</th></tr>
-  <tr><td>PIS</td><td>0,65%</td><td>{fmt(pis_anual)}</td></tr>
-  <tr><td>COFINS</td><td>3,00%</td><td>{fmt(cofins_anual)}</td></tr>
-  <tr><td>ISS (Municipal)</td><td>5,00%</td><td>{fmt(iss_anual)}</td></tr>
-  <tr><td>IRPJ (+ Adicional)</td><td>Presunção 15% (+10%)</td><td>{fmt(irpj_total_anual)}</td></tr>
-  <tr><td>CSLL</td><td>Presunção 9%</td><td>{fmt(csll_anual)}</td></tr>
-  <tr class="total-row"><td>TOTAL DE IMPOSTOS</td><td>-</td><td>{fmt(total_impostos_faturamento)}</td></tr>
-</table>
-
-<h3>4. Demonstrativo de Resultado Operacional</h3>
-<table>
-  <tr><td>Faturamento Bruto Total</td><td>{fmt(faturamento_anual)}</td></tr>
-  <tr><td>(-) Folha com Encargos</td><td>{fmt(custo_folha_com_encargos)}</td></tr>
-  <tr><td>(-) Impostos sobre Faturamento</td><td>{fmt(total_impostos_faturamento)}</td></tr>
-  <tr class="grand-total"><td>(=) RESULTADO LÍQUIDO OPERACIONAL (LAIR ANUAL)</td><td>{fmt(lair_anual)}</td></tr>
-</table>
-
-<div style="text-align:center; margin-top:15px;">
-  <img src="data:image/png;base64,{img_b64}" width="420">
-</div>
-</body></html>
-'''
-
-    try:
-        from weasyprint import HTML as WP_HTML
-        pdf_bytes = WP_HTML(string=html_pdf).write_pdf()
-        st.download_button(
-            label="⬇️ Baixar Relatório em PDF",
-            data=pdf_bytes,
-            file_name="Planejamento_Tributario_Lucro_Presumido.pdf",
-            mime="application/pdf"
-        )
-    except ImportError:
-        st.info("Para gerar o PDF, instale o WeasyPrint no servidor: `pip install weasyprint`")
-        st.download_button(
-            label="⬇️ Baixar Relatório em HTML",
-            data=html_pdf.encode("utf-8"),
-            file_name="Planejamento_Tributario.html",
-            mime="text/html"
-        )
+    st.download_button(
+        label="⬇️ Baixar Relatório em PDF",
+        data=pdf_buf,
+        file_name="Planejamento_Tributario_Lucro_Presumido.pdf",
+        mime="application/pdf"
+    )
